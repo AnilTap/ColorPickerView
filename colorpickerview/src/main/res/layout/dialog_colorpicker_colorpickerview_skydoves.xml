@@ -34,6 +34,10 @@
         android:layout_height="300dp"
         android:layout_gravity="center"
         android:layout_margin="20dp"
+        app:innerBorderColor="@android:color/white"
+        app:innerBorderWidth="1dp"
+        app:outerBorderColor="@android:color/darker_gray"
+        app:outerBorderWidth="1dp"
         app:selector="@drawable/wheel" />
 
     </FrameLayout>
@@ -51,7 +55,12 @@
         android:layout_marginTop="10dp"
         android:layout_marginRight="15dp"
         android:layout_marginBottom="10dp"
-        app:selector_AlphaSlideBar="@drawable/wheel" />
+        app:barVerticalPadding="4dp"
+        app:innerBorderColor="@android:color/white"
+        app:innerBorderWidth="1dp"
+        app:outerBorderColor="@android:color/darker_gray"
+        app:outerBorderWidth="1px"
+        app:selector="@drawable/wheel" />
     </FrameLayout>
 
     <FrameLayout
@@ -67,7 +76,12 @@
         android:layout_marginTop="10dp"
         android:layout_marginRight="15dp"
         android:layout_marginBottom="10dp"
-        app:selector_BrightnessSlider="@drawable/wheel" />
+        app:barVerticalPadding="4dp"
+        app:innerBorderColor="@android:color/white"
+        app:innerBorderWidth="1dp"
+        app:outerBorderColor="@android:color/darker_gray"
+        app:outerBorderWidth="1px"
+        app:selector="@drawable/wheel" />
     </FrameLayout>
 
     <Space

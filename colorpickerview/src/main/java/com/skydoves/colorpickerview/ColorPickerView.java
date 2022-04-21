@@ -98,6 +98,11 @@ public class ColorPickerView extends FrameLayout implements LifecycleObserver {
 
   private boolean VISIBLE_FLAG = false;
 
+  private int outerBorderWidth = 0;
+  private int outerBorderColor = Color.GRAY;
+  private int innerBorderWidth = 0;
+  private int innerBorderColor = Color.WHITE;
+
   private String preferenceName;
   private final ColorPickerPreferenceManager preferenceManager =
       ColorPickerPreferenceManager.getInstance(getContext());
@@ -168,6 +173,18 @@ public class ColorPickerView extends FrameLayout implements LifecycleObserver {
       if (a.hasValue(R.styleable.ColorPickerView_initialColor)) {
         setInitialColor(a.getColor(R.styleable.ColorPickerView_initialColor, Color.WHITE));
       }
+      if (a.hasValue(R.styleable.ColorPickerView_outerBorderWidth)) {
+        this.outerBorderWidth = a.getDimensionPixelSize(R.styleable.ColorPickerView_outerBorderWidth, outerBorderWidth);
+      }
+      if (a.hasValue(R.styleable.ColorPickerView_outerBorderColor)) {
+        this.outerBorderColor = a.getColor(R.styleable.ColorPickerView_outerBorderColor, outerBorderColor);
+      }
+      if (a.hasValue(R.styleable.ColorPickerView_innerBorderWidth)) {
+        this.innerBorderWidth = a.getDimensionPixelSize(R.styleable.ColorPickerView_innerBorderWidth, innerBorderWidth);
+      }
+      if (a.hasValue(R.styleable.ColorPickerView_innerBorderColor)) {
+        this.innerBorderColor = a.getColor(R.styleable.ColorPickerView_innerBorderColor, innerBorderColor);
+      }
     } finally {
       a.recycle();
     }
@@ -221,8 +238,7 @@ public class ColorPickerView extends FrameLayout implements LifecycleObserver {
     super.onSizeChanged(width, height, oldWidth, oldHeight);
 
     if (palette.getDrawable() == null) {
-      Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-      palette.setImageDrawable(new ColorHsvPalette(getResources(), bitmap));
+      palette.setImageDrawable(createColorHsvPalette());
     }
   }
 
@@ -751,8 +767,12 @@ public class ColorPickerView extends FrameLayout implements LifecycleObserver {
    * drawable.
    */
   public void setHsvPaletteDrawable() {
+    setPaletteDrawable(createColorHsvPalette());
+  }
+
+  private Drawable createColorHsvPalette() {
     Bitmap bitmap = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
-    setPaletteDrawable(new ColorHsvPalette(getResources(), bitmap));
+    return new ColorHsvPalette(getResources(), bitmap, outerBorderWidth, outerBorderColor, innerBorderWidth, innerBorderColor);
   }
 
   /**

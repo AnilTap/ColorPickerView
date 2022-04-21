@@ -27,6 +27,7 @@ import android.graphics.RadialGradient;
 import android.graphics.Shader;
 import android.graphics.SweepGradient;
 import android.graphics.drawable.BitmapDrawable;
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -36,13 +37,24 @@ import androidx.annotation.Nullable;
  */
 public class ColorHsvPalette extends BitmapDrawable {
 
-  private final Paint huePaint;
-  private final Paint saturationPaint;
+  private final Paint huePaint= new Paint(Paint.ANTI_ALIAS_FLAG);
+  private final Paint saturationPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+  private final Paint outerBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+  private final Paint innerBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+  private final int outerBorderWidth;
+  private final int innerBorderWidth;
 
-  public ColorHsvPalette(Resources resources, Bitmap bitmap) {
+  public ColorHsvPalette(Resources resources, Bitmap bitmap, int outerBorderWidth, @ColorInt int outerBorderColor, int innerBorderWidth, @ColorInt int innerBorderColor) {
     super(resources, bitmap);
-    this.huePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    this.saturationPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    this.outerBorderWidth = outerBorderWidth;
+    this.innerBorderWidth = innerBorderWidth;
+    outerBorderPaint.setStyle(Paint.Style.STROKE);
+    outerBorderPaint.setColor(outerBorderColor);
+    outerBorderPaint.setStrokeWidth(outerBorderWidth);
+
+    innerBorderPaint.setStyle(Paint.Style.STROKE);
+    innerBorderPaint.setColor(innerBorderColor);
+    innerBorderPaint.setStrokeWidth(innerBorderWidth);
   }
 
   @Override
@@ -52,6 +64,7 @@ public class ColorHsvPalette extends BitmapDrawable {
     float centerX = width * 0.5f;
     float centerY = height * 0.5f;
     float radius = Math.min(width, height) * 0.5f;
+    float paletteRadius = radius - innerBorderWidth - outerBorderWidth;
 
     Shader sweepShader =
         new SweepGradient(
@@ -61,16 +74,15 @@ public class ColorHsvPalette extends BitmapDrawable {
               Color.RED, Color.MAGENTA, Color.BLUE, Color.CYAN, Color.GREEN, Color.YELLOW, Color.RED
             },
             new float[] {0.000f, 0.166f, 0.333f, 0.499f, 0.666f, 0.833f, 0.999f});
-
     huePaint.setShader(sweepShader);
 
-    Shader saturationShader =
-        new RadialGradient(
-            centerX, centerY, radius, Color.WHITE, 0x00FFFFFF, Shader.TileMode.CLAMP);
+    Shader saturationShader = new RadialGradient(centerX, centerY, paletteRadius, Color.WHITE, 0x00FFFFFF, Shader.TileMode.CLAMP);
     saturationPaint.setShader(saturationShader);
 
-    canvas.drawCircle(centerX, centerY, radius, huePaint);
-    canvas.drawCircle(centerX, centerY, radius, saturationPaint);
+    canvas.drawCircle(centerX, centerY, paletteRadius, huePaint);
+    canvas.drawCircle(centerX, centerY, paletteRadius, saturationPaint);
+    canvas.drawCircle(centerX, centerY, radius - (innerBorderWidth / 2f) - outerBorderWidth, innerBorderPaint);
+    canvas.drawCircle(centerX, centerY, radius - (outerBorderWidth / 2f), outerBorderPaint);
   }
 
   @Override

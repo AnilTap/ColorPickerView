@@ -17,17 +17,15 @@
 package com.skydoves.colorpickerview.sliders;
 
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Shader;
 import android.util.AttributeSet;
 import androidx.annotation.ColorInt;
-import androidx.appcompat.content.res.AppCompatResources;
-import com.skydoves.colorpickerview.R;
 import com.skydoves.colorpickerview.preference.ColorPickerPreferenceManager;
 
 /**
@@ -56,25 +54,7 @@ public class AlphaSlideBar extends AbstractSlider {
   }
 
   @Override
-  protected void getAttrs(AttributeSet attrs) {
-    TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.AlphaSlideBar);
-    try {
-      if (a.hasValue(R.styleable.AlphaSlideBar_selector_AlphaSlideBar)) {
-        int resourceId = a.getResourceId(R.styleable.AlphaSlideBar_selector_AlphaSlideBar, -1);
-        if (resourceId != -1) {
-          selectorDrawable = AppCompatResources.getDrawable(getContext(), resourceId);
-        }
-      }
-      if (a.hasValue(R.styleable.AlphaSlideBar_borderColor_AlphaSlideBar)) {
-        borderColor = a.getColor(R.styleable.AlphaSlideBar_borderColor_AlphaSlideBar, borderColor);
-      }
-      if (a.hasValue(R.styleable.AlphaSlideBar_borderSize_AlphaSlideBar)) {
-        borderSize = a.getInt(R.styleable.AlphaSlideBar_borderSize_AlphaSlideBar, borderSize);
-      }
-    } finally {
-      a.recycle();
-    }
-  }
+  protected void getAttrs(AttributeSet attrs) {}
 
   @Override
   protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
@@ -83,6 +63,9 @@ public class AlphaSlideBar extends AbstractSlider {
       backgroundBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
       Canvas backgroundCanvas = new Canvas(backgroundBitmap);
       drawable.setBounds(0, 0, backgroundCanvas.getWidth(), backgroundCanvas.getHeight());
+      Path outPath = new Path();
+      outPath.addRoundRect(drawRect, cornerRadius, cornerRadius, Path.Direction.CW);
+      backgroundCanvas.clipPath(outPath);
       drawable.draw(backgroundCanvas);
     }
   }

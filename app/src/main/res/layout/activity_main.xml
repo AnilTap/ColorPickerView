@@ -53,6 +53,10 @@
       android:layout_marginBottom="10dp"
       android:layout_weight="6"
       app:initialColor="@color/colorPrimary"
+      app:innerBorderColor="@android:color/white"
+      app:innerBorderWidth="1dp"
+      app:outerBorderColor="@android:color/darker_gray"
+      app:outerBorderWidth="1dp"
       app:preferenceName="Test2"
       app:selector="@drawable/wheel" />
 
@@ -68,9 +72,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        app:borderColor_AlphaSlideBar="@android:color/darker_gray"
-        app:borderSize_AlphaSlideBar="5"
-        app:selector_AlphaSlideBar="@drawable/wheel" />
+        app:barVerticalPadding="4dp"
+        app:innerBorderColor="@android:color/white"
+        app:innerBorderWidth="1dp"
+        app:outerBorderColor="@android:color/darker_gray"
+        app:outerBorderWidth="1px"
+        app:selector="@drawable/wheel" />
     </LinearLayout>
 
     <LinearLayout
@@ -84,9 +91,12 @@
         android:id="@+id/brightnessSlide"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:borderColor_BrightnessSlider="@android:color/darker_gray"
-        app:borderSize_BrightnessSlider="5"
-        app:selector_BrightnessSlider="@drawable/wheel" />
+        app:barVerticalPadding="4dp"
+        app:innerBorderColor="@android:color/white"
+        app:innerBorderWidth="1dp"
+        app:outerBorderColor="@android:color/darker_gray"
+        app:outerBorderWidth="1px"
+        app:selector="@drawable/wheel" />
     </LinearLayout>
 
     <LinearLayout

@@ -19,13 +19,16 @@ package com.skydoves.colorpickerview.sliders;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
@@ -37,10 +40,12 @@ import androidx.annotation.ColorRes;
 import androidx.annotation.DimenRes;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.FloatRange;
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import com.skydoves.colorpickerview.ActionMode;
 import com.skydoves.colorpickerview.ColorPickerView;
+import com.skydoves.colorpickerview.R;
 
 /** AbstractSlider is the abstract class for implementing sliders. */
 @SuppressWarnings("unused")
@@ -48,15 +53,23 @@ abstract class AbstractSlider extends FrameLayout {
 
   public ColorPickerView colorPickerView;
   protected Paint colorPaint;
-  protected Paint borderPaint;
+  protected Paint outerBorderPaint;
+  protected Paint innerBorderPaint;
   protected float selectorPosition = 1.0f;
   protected int selectedX = 0;
   protected Drawable selectorDrawable;
-  protected int borderSize = 2;
-  protected int borderColor = Color.BLACK;
   protected int color = Color.WHITE;
   protected ImageView selector;
   protected String preferenceName;
+  protected float cornerRadius;
+  protected int barVerticalPadding = 0;
+  private int outerBorderWidth = 0;
+  private int outerBorderColor = Color.GRAY;
+  private int innerBorderWidth = 0;
+  private int innerBorderColor = Color.WHITE;
+  protected RectF drawRect;
+  protected RectF outerBorderRect;
+  protected RectF innerBorderRect;
 
   public AbstractSlider(Context context) {
     super(context);
@@ -72,12 +85,14 @@ abstract class AbstractSlider extends FrameLayout {
 
   public AbstractSlider(Context context, AttributeSet attrs) {
     super(context, attrs);
+    useAttrs(attrs);
     getAttrs(attrs);
     onCreate();
   }
 
   public AbstractSlider(Context context, AttributeSet attrs, int defStyleAttr) {
     super(context, attrs, defStyleAttr);
+    useAttrs(attrs);
     getAttrs(attrs);
     onCreate();
   }
@@ -85,8 +100,38 @@ abstract class AbstractSlider extends FrameLayout {
   @TargetApi(Build.VERSION_CODES.LOLLIPOP)
   public AbstractSlider(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
     super(context, attrs, defStyleAttr, defStyleRes);
+    useAttrs(attrs);
     getAttrs(attrs);
     onCreate();
+  }
+
+  private void useAttrs(AttributeSet attrs){
+    TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.AbstractSlider);
+    try {
+      if (a.hasValue(R.styleable.AbstractSlider_outerBorderWidth)) {
+        this.outerBorderWidth = a.getDimensionPixelSize(R.styleable.AbstractSlider_outerBorderWidth, outerBorderWidth);
+      }
+      if (a.hasValue(R.styleable.AbstractSlider_outerBorderColor)) {
+        this.outerBorderColor = a.getColor(R.styleable.AbstractSlider_outerBorderColor, outerBorderColor);
+      }
+      if (a.hasValue(R.styleable.AbstractSlider_innerBorderWidth)) {
+        this.innerBorderWidth = a.getDimensionPixelSize(R.styleable.AbstractSlider_innerBorderWidth, innerBorderWidth);
+      }
+      if (a.hasValue(R.styleable.AbstractSlider_barVerticalPadding)) {
+        this.barVerticalPadding = a.getDimensionPixelSize(R.styleable.AbstractSlider_barVerticalPadding, barVerticalPadding);
+      }
+      if (a.hasValue(R.styleable.AbstractSlider_innerBorderColor)) {
+        this.innerBorderColor = a.getColor(R.styleable.AbstractSlider_innerBorderColor, innerBorderColor);
+      }
+      if (a.hasValue(R.styleable.AbstractSlider_selector)) {
+        int resourceId = a.getResourceId(R.styleable.AbstractSlider_selector, -1);
+        if (resourceId != -1) {
+          selectorDrawable = AppCompatResources.getDrawable(getContext(), resourceId);
+        }
+      }
+    } finally {
+      a.recycle();
+    }
   }
 
   /** gets attribute sets style from layout */
@@ -103,12 +148,19 @@ abstract class AbstractSlider extends FrameLayout {
   public abstract @ColorInt int assembleColor();
 
   private void onCreate() {
+    this.setBackgroundColor(Color.TRANSPARENT);
+
     this.colorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    this.borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    this.borderPaint.setStyle(Paint.Style.STROKE);
-    this.borderPaint.setStrokeWidth(borderSize);
-    this.borderPaint.setColor(borderColor);
-    this.setBackgroundColor(Color.WHITE);
+    this.outerBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    this.innerBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    this.outerBorderPaint.setStyle(Paint.Style.STROKE);
+    this.outerBorderPaint.setStrokeWidth(outerBorderWidth);
+    this.outerBorderPaint.setColor(outerBorderColor);
+
+    this.innerBorderPaint.setStyle(Paint.Style.STROKE);
+    this.innerBorderPaint.setStrokeWidth(innerBorderWidth);
+    this.innerBorderPaint.setColor(innerBorderColor);
 
     selector = new ImageView(getContext());
     if (selectorDrawable != null) {
@@ -119,12 +171,24 @@ abstract class AbstractSlider extends FrameLayout {
   }
 
   @Override
+  protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+    super.onSizeChanged(w, h, oldw, oldh);
+    cornerRadius = h / 2f;
+    float drawOffset = getBorderSize();
+    drawRect = new RectF(drawOffset, drawOffset + barVerticalPadding, w - drawOffset, h - drawOffset - barVerticalPadding);
+    float innerBorderOffset = (innerBorderWidth / 2f) + outerBorderWidth;
+    innerBorderRect = new RectF(innerBorderOffset, innerBorderOffset + barVerticalPadding, w - innerBorderOffset, h - innerBorderOffset - barVerticalPadding);
+    float outerBorderOffset = outerBorderWidth / 2f;
+    outerBorderRect = new RectF(outerBorderOffset, outerBorderOffset + barVerticalPadding, w - outerBorderOffset, h - outerBorderOffset - barVerticalPadding);
+  }
+
+  @SuppressLint("NewApi")
+  @Override
   protected void onDraw(Canvas canvas) {
     super.onDraw(canvas);
-    float width = getMeasuredWidth();
-    float height = getMeasuredHeight();
-    canvas.drawRect(0, 0, width, height, colorPaint);
-    canvas.drawRect(0, 0, width, height, borderPaint);
+    canvas.drawRoundRect(drawRect, cornerRadius, cornerRadius, colorPaint);
+    canvas.drawRoundRect(outerBorderRect, cornerRadius, cornerRadius, outerBorderPaint);
+    canvas.drawRoundRect(innerBorderRect, cornerRadius, cornerRadius, innerBorderPaint);
   }
 
   /** called by {@link ColorPickerView} whenever {@link ColorPickerView} is triggered. */
@@ -199,7 +263,7 @@ abstract class AbstractSlider extends FrameLayout {
 
   public void setSelectorPosition(@FloatRange(from = 0.0, to = 1.0) float selectorPosition) {
     this.selectorPosition = Math.min(selectorPosition, 1.0f);
-    float x = (getMeasuredWidth() * selectorPosition) - getSelectorSize() - getBorderHalfSize();
+    float x = (getMeasuredWidth() * selectorPosition) - getSelectorSize() - getBorderSize();
     selectedX = (int) getBoundaryX(x);
     selector.setX(selectedX);
   }
@@ -207,14 +271,13 @@ abstract class AbstractSlider extends FrameLayout {
   public void setSelectorByHalfSelectorPosition(
       @FloatRange(from = 0.0, to = 1.0) float selectorPosition) {
     this.selectorPosition = Math.min(selectorPosition, 1.0f);
-    float x =
-        (getMeasuredWidth() * selectorPosition) - (getSelectorSize() * 0.5f) - getBorderHalfSize();
+    float x = (getMeasuredWidth() * selectorPosition) - (getSelectorSize() * 0.5f) - getBorderSize();
     selectedX = (int) getBoundaryX(x);
     selector.setX(selectedX);
   }
 
   private float getBoundaryX(float x) {
-    int maxPos = getMeasuredWidth() - selector.getMeasuredWidth();
+    int maxPos = getMeasuredWidth() - getSelectorSize();
     if (x >= maxPos) return maxPos;
     if (x <= getSelectorSize()) return 0;
     return x - getSelectorSize();
@@ -224,8 +287,8 @@ abstract class AbstractSlider extends FrameLayout {
     return (int) (selector.getMeasuredWidth());
   }
 
-  protected int getBorderHalfSize() {
-    return (int) (borderSize * 0.5f);
+  protected int getBorderSize() {
+    return outerBorderWidth+innerBorderWidth;
   }
 
   private void initializeSelector() {
@@ -270,45 +333,87 @@ abstract class AbstractSlider extends FrameLayout {
   }
 
   /**
-   * sets a color of the slider border.
+   * sets a color of the slider outerBorder.
    *
-   * @param color color of the slider border.
+   * @param color color of the slider outerBorder.
    */
-  public void setBorderColor(@ColorInt int color) {
-    this.borderColor = color;
-    this.borderPaint.setColor(color);
+  public void setOuterBorderColor(@ColorInt int color) {
+    this.outerBorderColor = color;
+    this.outerBorderPaint.setColor(color);
     invalidate();
   }
 
   /**
-   * sets a color resource of the slider border.
+   * sets a color resource of the slider outerBorder.
    *
-   * @param resource color resource of the slider border.
+   * @param resource color resource of the slider outerBorder.
    */
-  public void setBorderColorRes(@ColorRes int resource) {
+  public void setOuterBorderColorRes(@ColorRes int resource) {
     int color = ContextCompat.getColor(getContext(), resource);
-    setBorderColor(color);
+    setOuterBorderColor(color);
   }
 
   /**
-   * sets a size of the slide border.
+   * sets a size of the slide outerBorder.
    *
-   * @param borderSize ize of the slide border.
+   * @param outerBorderWidth ize of the slide outerBorder.
    */
-  public void setBorderSize(int borderSize) {
-    this.borderSize = borderSize;
-    this.borderPaint.setStrokeWidth(borderSize);
+  public void setOuterBorderWidth(int outerBorderWidth) {
+    this.outerBorderWidth = outerBorderWidth;
+    this.outerBorderPaint.setStrokeWidth(outerBorderWidth);
     invalidate();
   }
 
   /**
-   * sets a size of the slide border using dimension resource.
+   * sets a size of the slide outerBorder using dimension resource.
    *
-   * @param resource a size of the slide border.
+   * @param resource a size of the slide outerBorder.
    */
-  public void setBorderSizeRes(@DimenRes int resource) {
-    int borderSize = (int) getContext().getResources().getDimension(resource);
-    setBorderSize(borderSize);
+  public void setOuterBorderSizeRes(@DimenRes int resource) {
+    int outerBorderSize = (int) getContext().getResources().getDimension(resource);
+    setOuterBorderWidth(outerBorderSize);
+  }
+
+  /**
+   * sets a color of the slider innerBorder.
+   *
+   * @param color color of the slider innerBorder.
+   */
+  public void setInnerBorderColor(@ColorInt int color) {
+    this.innerBorderColor = color;
+    this.innerBorderPaint.setColor(color);
+    invalidate();
+  }
+
+  /**
+   * sets a color resource of the slider innerBorder.
+   *
+   * @param resource color resource of the slider innerBorder.
+   */
+  public void setInnerBorderColorRes(@ColorRes int resource) {
+    int color = ContextCompat.getColor(getContext(), resource);
+    setInnerBorderColor(color);
+  }
+
+  /**
+   * sets a size of the slide innerBorder.
+   *
+   * @param innerBorderWidth ize of the slide innerBorder.
+   */
+  public void setInnerBorderWidth(int innerBorderWidth) {
+    this.innerBorderWidth = innerBorderWidth;
+    this.innerBorderPaint.setStrokeWidth(innerBorderWidth);
+    invalidate();
+  }
+
+  /**
+   * sets a size of the slide innerBorder using dimension resource.
+   *
+   * @param resource a size of the slide innerBorder.
+   */
+  public void setInnerBorderSizeRes(@DimenRes int resource) {
+    int innerBorderSize = (int) getContext().getResources().getDimension(resource);
+    setInnerBorderWidth(innerBorderSize);
   }
 
   /** called when the inflating finished. */

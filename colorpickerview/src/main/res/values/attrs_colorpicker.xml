@@ -26,22 +26,28 @@
       <!-- trigger the listener only the last color when user release tapping. -->
       <enum name="last" value="1" />
     </attr>
+    <!-- sets an width of the outer border. -->
+    <attr name="outerBorderWidth" format="dimension" />
+    <!-- sets an color of the outer border. -->
+    <attr name="outerBorderColor" format="color" />
+    <!-- sets an width of the inner border. -->
+    <attr name="innerBorderWidth" format="dimension" />
+    <!-- sets an color of the inner border. -->
+    <attr name="innerBorderColor" format="color" />
   </declare-styleable>
-  <declare-styleable name="AlphaSlideBar">
+  <declare-styleable name="AbstractSlider">
+    <!-- sets an vertical padding of the bar. -->
+    <attr name="barVerticalPadding" format="dimension" />
+    <!-- sets an width of the outer border. -->
+    <attr name="outerBorderWidth" />
+    <!-- sets an color of the outer border. -->
+    <attr name="outerBorderColor" />
+    <!-- sets an width of the inner border. -->
+    <attr name="innerBorderWidth" />
+    <!-- sets an color of the inner border. -->
+    <attr name="innerBorderColor" />
     <!-- sets a customized selector drawable. -->
-    <attr name="selector_AlphaSlideBar" format="integer" />
-    <!-- sets a color of the border. -->
-    <attr name="borderColor_AlphaSlideBar" format="color" />
-    <!-- sets a size of the border. -->
-    <attr name="borderSize_AlphaSlideBar" format="integer" />
-  </declare-styleable>
-  <declare-styleable name="BrightnessSlideBar">
-    <!-- sets a customized selector drawable. -->
-    <attr name="selector_BrightnessSlider" format="integer" />
-    <!-- sets a color of the border. -->
-    <attr name="borderColor_BrightnessSlider" format="color" />
-    <!-- sets a size of the border. -->
-    <attr name="borderSize_BrightnessSlider" format="integer" />
+    <attr name="selector" />
   </declare-styleable>
   <declare-styleable name="AlphaTileView">
     <!-- sets width/height square size of the title. -->
